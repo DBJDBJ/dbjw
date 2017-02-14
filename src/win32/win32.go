@@ -91,7 +91,7 @@ func FactoryMethod(dllNameArg string, funameArg string) DllProc {
 	if funameArg == "" {
 		panic("Function name must be given")
 	}
-	return &dllProc{dllName: dllNameArg, procName: funameArg}
+	return dllProc{dllName: dllNameArg, procName: funameArg}
 }
 
 //MessageBox shows the message using message box of the underlying OS
@@ -124,7 +124,7 @@ func (box mBoxImp) Show(message string, title string, decoration uint) uintptr {
 func FactoriseMessageBox() MessageBox {
 	p, ok := FactoryMethod("user32", "MessageBoxW").(dllProc)
 
-	if ! ok  {
+	if false == ok  {
 		panic("Zero value dllProc returned from FactoryMethod('user32', 'MessageBoxW') ")
 	}
 	return mBoxImp{ theProc: p  }
