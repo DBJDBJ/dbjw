@@ -61,7 +61,7 @@ type dllProc struct {
 return the instance of the proc from a given dll dynamicaly loaded
 this is DLLPorc interface implementation
 */
-func (dllInstance *dllProc) Proc() *syscall.LazyProc {
+func (dllInstance dllProc) Proc() *syscall.LazyProc {
 
 	if dllInstance.dllName == "" {
 		panic("dllProc has not been given dllName!")
@@ -82,28 +82,6 @@ func (dllInstance *dllProc) Proc() *syscall.LazyProc {
 }
 
 
-//MessageBox shows the message using message box of the underlying OS
-//in this case only WIN32
-type MessageBox interface {
-	Show(message string, title string, decoration uint) uintptr
-}
-
-//implementation of the Show method of the MessageBoxW interface
-func (box * dllProc) Show(message string, title string, decoration uint) uintptr {
-	
-	box.mux.Lock()
-	defer box.mux.Unlock()
-
-	ret, _, _ := box.Proc().Call(
-		0,
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(message))),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(title))),
-		uintptr(decoration))
-
-	return ret
-}
-
-
 //FactoryMethod returns uninitialized isntance of dllProc type
 func FactoryMethod(dllNameArg string, funameArg string) DllProc {
 
@@ -116,7 +94,38 @@ func FactoryMethod(dllNameArg string, funameArg string) DllProc {
 	return &dllProc{dllName: dllNameArg, procName: funameArg}
 }
 
-//FactorisedllProc create WIN32 MessageBoxW
+//MessageBox shows the message using message box of the underlying OS
+//in this case only WIN32
+type MessageBox interface {
+	Show(message string, title string, decoration uint) uintptr
+}
+
+// MessageBox implementor
+type mBoxImp struct {
+	theProc dllProc
+}
+
+//implementation of the Show method of the MessageBoxW interface
+func (box mBoxImp) Show(message string, title string, decoration uint) uintptr {
+	
+	box.theProc.mux.Lock()
+	defer box.theProc.mux.Unlock()
+
+	ret, _, _ := box.theProc.Proc().Call(
+		0,
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(message))),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(title))),
+		uintptr(decoration))
+
+	return ret
+}
+
+//FactoriseMessageBox creates WIN32 MessageBoxW
 func FactoriseMessageBox() MessageBox {
-	return FactoryMethod("user32", "MessageBoxW")
+	p, ok := FactoryMethod("user32", "MessageBoxW").(dllProc)
+
+	if ! ok  {
+		panic("Zero value dllProc returned from FactoryMethod('user32', 'MessageBoxW') ")
+	}
+	return mBoxImp{ theProc: p  }
 }
