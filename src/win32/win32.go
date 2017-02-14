@@ -43,6 +43,8 @@ const (
 //DllProc is defined by its name and the dll in which it resides
 type DllProc interface {
       Proc () * syscall.LazyProc
+	  Release () (err error)
+	  Call(a ...uintptr) (r1, r2 uintptr, lastErr error)
 }
 
 /* dllProc
@@ -52,9 +54,28 @@ NOTE: types names with small first letter are hidden ie not visible outside of p
 type dllProc struct {
 	dllName  string
 	procName string
-	dll_   *syscall.LazyDLL
-	proc_     *syscall.LazyProc
+	dll_   * syscall.LazyDLL
+	proc_  * syscall.LazyProc
 	mux      sync.Mutex
+}
+
+func (p dllProc) Call(a ...uintptr) (r1, r2 uintptr, lastErr error) {
+
+	p.mux.Lock()
+	defer p.Release()
+	defer p.mux.Unlock()
+	
+	return p.proc_.Call(a...)
+}
+
+func (dllInstance dllProc) Release() (err error) {
+
+	if dllInstance.dll_ != nil {
+		// h  syscall.Handle 
+		h :=  syscall.Handle( dllInstance.dll_.Handle() )
+		return syscall.FreeLibrary(h)
+	}
+	return nil
 }
 
 /*
@@ -109,6 +130,7 @@ type mBoxImp struct {
 func (box mBoxImp) Show(message string, title string, decoration uint) uintptr {
 	
 	box.theProc.mux.Lock()
+	defer box.theProc.Release()
 	defer box.theProc.mux.Unlock()
 
 	ret, _, _ := box.theProc.Proc().Call(

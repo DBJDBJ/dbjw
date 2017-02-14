@@ -14,19 +14,16 @@ package main
 // "unsafe"
 import (
 	"fmt"
-	"syscall"
 	"win32"
 )
 
 func main() {
-	var kernel32 = syscall.NewLazyDLL("kernel32.dll")
-	var beep = kernel32.NewProc("Beep")
 	frequency := uintptr(1000)
 	duration := uintptr(3000)
-	ret, _, _ := beep.Call(frequency, duration)
+	win32.FactoryMethod("kernel32.dll","Beep").Call(frequency, duration)
 
 	var messageBox = win32.FactoriseMessageBox()
-	ret = messageBox.Show("This test is Done.", "DBJ*GOWIN", win32.MB_OK|win32.MB_ICONINFORMATION)
+	var ret = messageBox.Show("This test is Done.", "DBJ*GOWIN", win32.MB_OK|win32.MB_ICONINFORMATION)
 
 	fmt.Printf("Message Box Returned: %d\n", ret)
 
