@@ -65,7 +65,7 @@ func (p dllProc) Call(a ...uintptr) (r1, r2 uintptr, lastErr error) {
 	defer p.Release()
 	defer p.mux.Unlock()
 	
-	return p.proc_.Call(a...)
+	return p.Proc().Call(a...)
 }
 
 func (dllInstance dllProc) Release() (err error) {
