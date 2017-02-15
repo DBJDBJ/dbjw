@@ -18,11 +18,12 @@ import (
 )
 
 func main() {
-	frequency := uintptr(1000)
-	duration := uintptr(3000)
 	beep := win32.FactoryMethod("kernel32.dll","Beep")
 	
-	if nil != beep { beep.Call(frequency, duration) } else { fmt.Println("Hey, where is Beep() ?!")}
+	frequency := uintptr(1000)
+	duration := uintptr(3000)
+
+	beep.Call(frequency, duration) 
 
 	var messageBox = win32.FactoriseMessageBox()
 	var ret = messageBox.Show("This test is Done.", "DBJ*GOWIN", win32.MB_OK|win32.MB_ICONINFORMATION)
