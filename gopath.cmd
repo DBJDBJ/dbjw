@@ -1,5 +1,5 @@
-@echo off
 ::
-:: set the gopath to the current folder
+@echo.
+@echo Set the gopath to the current folder
 ::
 set "GOPATH=%cd%"
